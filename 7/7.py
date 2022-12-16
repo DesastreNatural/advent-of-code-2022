@@ -1,5 +1,8 @@
 from functools import reduce
 import operator
+import sys
+
+sys.setrecursionlimit(2000)
 
 def getFromDict(dataDict, mapList):
     return reduce(operator.getitem, mapList, dataDict)
@@ -24,19 +27,34 @@ class dummyFs:
         else:
             setInDict(self.fs,self.whereami + [name],int(definer))
 
-def part1(dfs,data=[]):
-    for key in dfs.fs.keys():
-        if type(dfs.fs[key]) is dict:
-            total_folder += part1(dfs.fs[key])
+def resolve_folder_size(fs):
+    total_folder = 0
+    for key in fs.keys():
+        if type(fs[key]) is dict:
+            total_folder += resolve_folder_size(fs[key])
         else:
-            total_folder += dfs.fs[key]
+            total_folder += fs[key]
+    return total_folder
+
+def resolve_folders(fs):
+    data = []
+    for key in fs.keys():
+        if type(fs[key]) is dict:
+            data += [(key,resolve_folder_size(fs[key]))] + resolve_folders(fs[key])
+    return data
+
+def part1(fs):
+    return sum([size for name,size in resolve_folders(fs) if size <= 100000])
+def part2(fs):
+    needed_space = 30000000 - (70000000 - resolve_folder_size(fs))
+    return min([size for name,size in resolve_folders(fs) if size >= needed_space])
 
 if __name__ == '__main__':
     import os
 
     inp_path = os.path.join(
         os.path.dirname(__file__),
-        "input1"
+        "input"
     )
 
     with open(inp_path,"r") as inp_f:
@@ -47,7 +65,6 @@ if __name__ == '__main__':
         while(i != len(terminal)):
             if state == 'normal':
                 if terminal[i].startswith('$'):
-                    print(terminal[i])
                     if len(terminal[i].split(" ")) == 2:
                         [symbol, cmd] = terminal[i].split(" ")
                         state = "ls"
@@ -62,4 +79,5 @@ if __name__ == '__main__':
                     [definer, name] = terminal[i].split(" ")
                     dfs.ls(definer,name)
                     i += 1
-        print(dfs.fs)
+        print("First solution:",part1(dfs.fs))
+        print("Second solution:",part2(dfs.fs))
