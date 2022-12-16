@@ -1,11 +1,9 @@
 from functools import reduce
 import operator
-import sys
-
-sys.setrecursionlimit(2000)
 
 def getFromDict(dataDict, mapList):
     return reduce(operator.getitem, mapList, dataDict)
+
 def setInDict(dataDict, mapList, value):
     getFromDict(dataDict, mapList[:-1])[mapList[-1]] = value
 
